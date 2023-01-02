@@ -1,9 +1,10 @@
 import * as React from "react";
 import styled from "styled-components";
-import WalletConnect from "@walletconnect/client";
-import QRCodeModal from "@walletconnect/qrcode-modal";
+import WalletConnect from "@strusth/client";
+import QRCodeModal from "@strusth/qrcode-modal"
 import { convertUtf8ToHex } from "@walletconnect/utils";
-import { IInternalEvent } from "@walletconnect/types";
+import { IInternalEvent, } from "@walletconnect/types";
+// IPushServerOptions
 import Button from "./components/Button";
 import Column from "./components/Column";
 import Wrapper from "./components/Wrapper";
@@ -11,7 +12,7 @@ import Modal from "./components/Modal";
 import Header from "./components/Header";
 import Loader from "./components/Loader";
 import { fonts } from "./styles";
-import { apiGetAccountAssets, apiGetGasPrices, apiGetAccountNonce } from "./helpers/api";
+import { apiGetAccountAssets, apiGetGasPrices } from "./helpers/api"; // apiGetAccountNonce
 import {
   sanitizeHex,
   verifySignature,
@@ -23,7 +24,8 @@ import { IAssetData } from "./helpers/types";
 import Banner from "./components/Banner";
 import AccountAssets from "./components/AccountAssets";
 import { eip712 } from "./helpers/eip712";
-
+import { apiGetAccounts, apiGetBalance, apiGetBlockNumber, apiGetGasPrice, apiGetNonce, apiGetTransactionCount } from './helpers/web3_utils'
+import { getAccounts, getBalance, getProviderGasPrice } from "./helpers/ethers_utils";
 const SLayout = styled.div`
   position: relative;
   width: 100%;
@@ -139,13 +141,19 @@ interface IAppState {
   address: string;
   result: any | null;
   assets: IAssetData[];
+  token: IToken;
+}
+
+interface IToken {
+  contractAddress: string;
+  decimals: number;
 }
 
 const INITIAL_STATE: IAppState = {
   connector: null,
   fetching: false,
   connected: false,
-  chainId: 1,
+  chainId: 137,
   showModal: false,
   pendingRequest: false,
   uri: "",
@@ -153,6 +161,10 @@ const INITIAL_STATE: IAppState = {
   address: "",
   result: null,
   assets: [],
+  token: {
+    contractAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+    decimals: 6,
+  }
 };
 
 class App extends React.Component<any, any> {
@@ -160,24 +172,103 @@ class App extends React.Component<any, any> {
     ...INITIAL_STATE,
   };
 
+  public setChainId = (chainNumber: string) => {
+    const chainId = parseInt(chainNumber, 10);
+    this.setState({
+      ...this.state,
+      chainId,
+    })
+  }
+
   public connect = async () => {
     // bridge url
     const bridge = "https://bridge.walletconnect.org";
+    const clientMeta = {
+      description: "Connect with D'CENT Wallet",
+      url: "https://77f9-58-151-32-202.jp.ngrok.io/",
+      icons: ["https://77f9-58-151-32-202.jp.ngrok.io/favicon.ico"],
+      name: "Custom WC",
+    };
+    // const peerMeta = {
+    //   description: "Connect with WalletConnect DDDDD",
+    //   url: "http://192.168.0.235:3000",
+    //   icons: ["http://192.168.0.235:3000/pentabreed.png"],
+    //   name: "WalletConnect DDDDDD",
+    // }
+    // const pushServerOptions : IPushServerOptions= {
+    //   url:'',
+    //   type : '',
+    //   token :'0xdac17f958d2ee523a2206206994597c13d831ec7',
+    //   peerMeta : true,
+    //   // language
+    // }
 
-    // create new connector
-    const connector = new WalletConnect({ bridge, qrcodeModal: QRCodeModal });
+    // const qrcodeModalOptions = {
+    //   serviceName: 'SKYPlay',
+    //   accounts: [
+    //     {
+    //       contractAddress: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+    //       networkType: 'ARBITRUM',
+    //       name: 'Tether',
+    //       symbol: 'USDT'
+    //     },
+    //     {
+    //       contractAddress: '',
+    //       networkType: 'HECO',
+    //     },
+    //     {
+    //       contractAddress: '',
+    //       networkType: 'BODA',
+    //     },
+    //     {
+    //       contractAddress: '',
+    //       networkType: 'SONGBIRD',
+    //     },
+    //     {
+    //       contractAddress: '0x4c665bbafd28ec9e5d792345f470ebfca21e3d15',
+    //       networkType: 'POLYGON',
+    //       name: 'SKYPlay',
+    //       symbol: 'SKP'
+    //     },
+    //     {
+    //       contractAddress: '',
+    //       networkType: 'XRP',
+    //     },
+
+    //   ],
+    // };
+    const qrcodeModalOptions = {
+      serviceName: 'SKYPlay',
+      accounts: [
+        {
+          contractAddress: '0x4c665bbafd28ec9e5d792345f470ebfca21e3d15',
+          networkType: 'POLYGON',
+          name: 'SKYPlay',
+          symbol: 'SKP'
+        },
+        {
+          contractAddress: '',
+          networkType: 'XRP',
+        },
+      ]
+    }
+    const connector =  new WalletConnect({ bridge, qrcodeModal: QRCodeModal, qrcodeModalOptions, clientMeta });
 
     await this.setState({ connector });
-
+    console.log('init ', connector)
     // check if already connected
     if (!connector.connected) {
       // create new session
-      await connector.createSession();
+      console.log('before create session', connector);
+      await connector.createSession({ chainId: this.state.chainId });
     }
 
     // subscribe to events
+    console.log('after create session', connector)
     await this.subscribeToEvents();
   };
+
+
   public subscribeToEvents = () => {
     const { connector } = this.state;
 
@@ -218,16 +309,18 @@ class App extends React.Component<any, any> {
 
     if (connector.connected) {
       const { chainId, accounts } = connector;
+      console.log(accounts)
       const address = accounts[0];
       this.setState({
         connected: true,
-        chainId,
+        chainId: 1,
         accounts,
         address,
       });
       this.onSessionUpdate(accounts, chainId);
+      console.log('subscribeToEvents connector.connected')
     }
-
+    console.log('subscribeToEvents')
     this.setState({ connector });
   };
 
@@ -245,7 +338,10 @@ class App extends React.Component<any, any> {
 
   public onConnect = async (payload: IInternalEvent) => {
     const { chainId, accounts } = payload.params[0];
-    const address = accounts[0];
+    // const mappedAccounts = accounts.map(account => account.toLowerCase());
+    const address = accounts[0].toLowerCase();
+    console.log('current accounts', accounts)
+    console.log('payload', payload)
     await this.setState({
       connected: true,
       chainId,
@@ -267,6 +363,7 @@ class App extends React.Component<any, any> {
 
   public getAccountAssets = async () => {
     const { address, chainId } = this.state;
+    console.log(`address : ${address}\n chainId : ${chainId}`)
     this.setState({ fetching: true });
     try {
       // get account balances
@@ -281,49 +378,122 @@ class App extends React.Component<any, any> {
 
   public toggleModal = () => this.setState({ showModal: !this.state.showModal });
 
-  public testSendTransaction = async () => {
-    const { connector, address, chainId } = this.state;
+  public testAddToken = async () => {
+    const { connector, address, chainId, assets } = this.state;
+    console.log('assets', assets)
 
     if (!connector) {
       return;
     }
 
+    // test message
+    const message = `add Token`;
+
+    // hash message
+    // const hash = hashMessage(message);
+    const hexMsg = convertUtf8ToHex(message);
+
+    // eth_sign params
+    // const msgParams = [address, hash];
+    const msgParams = [hexMsg, address]
+
+    try {
+      // open modal
+      this.toggleModal();
+
+      // toggle pending request indicator
+      this.setState({ pendingRequest: true });
+
+      // send message
+      const result = await connector.signMessage(msgParams);
+
+      // verify signature
+      const valid = await verifySignature(address, result, hexMsg, chainId);
+      console.log(valid)
+      // format displayed result
+      const formattedResult = {
+        method: "addToken",
+        address,
+        valid,
+        result,
+      };
+
+      // display result
+      this.setState({
+        connector,
+        pendingRequest: false,
+        result: formattedResult || null,
+      });
+    } catch (error) {
+      console.error(error);
+      this.setState({ connector, pendingRequest: false, result: null });
+    }
+  };
+  public testSendTransaction = async () => {
+    // const { connector, address, chainId } = this.state;
+    const { connector, address } = this.state;
+
+    if (!connector) {
+      return;
+    }
+    // 672324007754989393
+    // 150000000000000000
     // from
     const from = address;
 
     // to
-    const to = address;
+    const to = '0xb10C975b92F563AF88F34DB4d7178352c5bc1311';
+    const accounts = await getAccounts();
+    console.log(accounts)
+
+    // 0xb10C975b92F563AF88F34DB4d7178352c5bc1311
 
     // nonce
-    const _nonce = await apiGetAccountNonce(address, chainId);
-    const nonce = sanitizeHex(convertStringToHex(_nonce));
+    // const _nonce = await apiGetAccountNonce(address, chainId);
+    // const nonce = sanitizeHex(convertStringToHex(_nonce));
 
+
+    // const _blockNumber = await apiGetBlockNumber();
+
+    // const _nonce = await apiGetNonce(_blockNumber);
+    const _nonce = await apiGetTransactionCount(address);
+    console.log('_nonce', _nonce)
+    // const nonce = sanitizeHex(convertStringToHex(_nonce));
     // gasPrice
-    const gasPrices = await apiGetGasPrices();
-    const _gasPrice = gasPrices.slow.price;
-    const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
+    // const gasPrices = await apiGetGasPrice();
+    const gasPrices = await getProviderGasPrice();
+    console.log(gasPrices)
+    const gasPrice = sanitizeHex(gasPrices);
+    // console.log(gasPrice)
+    // const _gasPrice = gasPrices;
+    // const _gasPrice = gasPrices.slow.price;
+    // const _gasPrice = gasPrices;
 
+    // const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
+    // const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 18)));
+    console.log(gasPrice)
     // gasLimit
     const _gasLimit = 21000;
     const gasLimit = sanitizeHex(convertStringToHex(_gasLimit));
 
     // value
-    const _value = 0;
+    const _value = 150000000000000000;
     const value = sanitizeHex(convertStringToHex(_value));
 
     // data
-    const data = "0x";
+    // const data = "0x";
 
     // test transaction
     const tx = {
       from,
       to,
-      nonce,
+      // nonce,
       gasPrice,
       gasLimit,
       value,
-      data,
+      // data,
     };
+    console.log('signed tx', tx)
 
     try {
       // open modal
@@ -357,7 +527,8 @@ class App extends React.Component<any, any> {
   };
 
   public testSignTransaction = async () => {
-    const { connector, address, chainId } = this.state;
+    // const { connector, address, chainId } = this.state;
+    const { connector, address } = this.state;
 
     if (!connector) {
       return;
@@ -368,13 +539,19 @@ class App extends React.Component<any, any> {
 
     // to
     const to = address;
-
+    const balance = await getBalance(address);
+    console.log(balance);
     // nonce
-    const _nonce = await apiGetAccountNonce(address, chainId);
-    const nonce = sanitizeHex(convertStringToHex(_nonce));
+    // const _nonce = await apiGetAccountNonce(address, chainId);
+    const _blockNumber = await apiGetBlockNumber();
 
+    const _nonce = await apiGetNonce(_blockNumber);
+    console.log('_nonce', _nonce)
+    const nonce = sanitizeHex(convertStringToHex(_nonce));
+    console.log('nonce', nonce);
     // gasPrice
     const gasPrices = await apiGetGasPrices();
+    console.log(gasPrices)
     const _gasPrice = gasPrices.slow.price;
     const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
 
@@ -399,6 +576,7 @@ class App extends React.Component<any, any> {
       value,
       data,
     };
+    console.log('tx', tx)
 
     try {
       // open modal
@@ -605,6 +783,12 @@ class App extends React.Component<any, any> {
       // verify signature
       const hash = hashTypedDataMessage(message);
       const valid = await verifySignature(address, result, hash, chainId);
+      const web3Accounts = await apiGetAccounts();
+      const web3GasPrice = await apiGetGasPrice();
+      const web3Balance = await apiGetBalance(address);
+      console.log(web3Balance);
+      console.log('gas', web3GasPrice)
+      console.log(web3Accounts)
 
       // format displayed result
       const formattedResult = {
@@ -654,6 +838,10 @@ class App extends React.Component<any, any> {
                   <br />
                   <span>{`v${process.env.REACT_APP_VERSION}`}</span>
                 </h3>
+                <div>
+                  <button onClick={() => this.setChainId('1')}>Ethereum</button>
+                  <button onClick={() => this.setChainId('8217')}>Klaytn</button>
+                </div>
                 <SButtonContainer>
                   <SConnectButton left onClick={this.connect} fetching={fetching}>
                     {"Connect to WalletConnect"}
@@ -683,6 +871,9 @@ class App extends React.Component<any, any> {
                     </STestButton>
                     <STestButton left onClick={this.testPersonalSignMessage}>
                       {"personal_sign"}
+                    </STestButton>
+                    <STestButton left onClick={this.testAddToken} >
+                      {"Add_Token"}
                     </STestButton>
                   </STestButtonContainer>
                 </Column>
