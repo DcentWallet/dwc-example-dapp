@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
-import WalletConnect from "@strusth/client";
-import QRCodeModal from "@strusth/qrcode-modal"
+import WalletConnect from "@dcentwallet/walletconnect-client";
+import QRCodeModal from "@dcentwallet/qrcode-modal";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import { IInternalEvent, } from "@walletconnect/types";
 // IPushServerOptions
@@ -24,12 +24,13 @@ import { IAssetData } from "./helpers/types";
 import Banner from "./components/Banner";
 import AccountAssets from "./components/AccountAssets";
 import { eip712 } from "./helpers/eip712";
-import { apiGetAccounts, apiGetBalance, apiGetBlockNumber, apiGetGasPrice, apiGetNonce, apiGetTransactionCount } from './helpers/web3_utils'
-import { getAccounts, getBalance, getProviderGasPrice } from "./helpers/ethers_utils";
+import { apiGetBlockNumber, apiGetNonce } from './helpers/web3_utils'
+import { getProviderGasPrice } from "./helpers/ethers_utils";
+import NetworkList from "./components/NetworkList";
+import { activeNet } from "./constant/EthereumType";
 const SLayout = styled.div`
   position: relative;
   width: 100%;
-  /* height: 100%; */
   min-height: 100vh;
   text-align: center;
 `;
@@ -174,6 +175,7 @@ class App extends React.Component<any, any> {
 
   public setChainId = (chainNumber: string) => {
     const chainId = parseInt(chainNumber, 10);
+    alert(`${chainNumber} 을 선택 하셨습니다`)
     this.setState({
       ...this.state,
       chainId,
@@ -181,62 +183,6 @@ class App extends React.Component<any, any> {
   }
 
   public connect = async () => {
-    // bridge url
-    const bridge = "https://bridge.walletconnect.org";
-    const clientMeta = {
-      description: "Connect with D'CENT Wallet",
-      url: "https://77f9-58-151-32-202.jp.ngrok.io/",
-      icons: ["https://77f9-58-151-32-202.jp.ngrok.io/favicon.ico"],
-      name: "Custom WC",
-    };
-    // const peerMeta = {
-    //   description: "Connect with WalletConnect DDDDD",
-    //   url: "http://192.168.0.235:3000",
-    //   icons: ["http://192.168.0.235:3000/pentabreed.png"],
-    //   name: "WalletConnect DDDDDD",
-    // }
-    // const pushServerOptions : IPushServerOptions= {
-    //   url:'',
-    //   type : '',
-    //   token :'0xdac17f958d2ee523a2206206994597c13d831ec7',
-    //   peerMeta : true,
-    //   // language
-    // }
-
-    // const qrcodeModalOptions = {
-    //   serviceName: 'SKYPlay',
-    //   accounts: [
-    //     {
-    //       contractAddress: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
-    //       networkType: 'ARBITRUM',
-    //       name: 'Tether',
-    //       symbol: 'USDT'
-    //     },
-    //     {
-    //       contractAddress: '',
-    //       networkType: 'HECO',
-    //     },
-    //     {
-    //       contractAddress: '',
-    //       networkType: 'BODA',
-    //     },
-    //     {
-    //       contractAddress: '',
-    //       networkType: 'SONGBIRD',
-    //     },
-    //     {
-    //       contractAddress: '0x4c665bbafd28ec9e5d792345f470ebfca21e3d15',
-    //       networkType: 'POLYGON',
-    //       name: 'SKYPlay',
-    //       symbol: 'SKP'
-    //     },
-    //     {
-    //       contractAddress: '',
-    //       networkType: 'XRP',
-    //     },
-
-    //   ],
-    // };
     const qrcodeModalOptions = {
       serviceName: 'SKYPlay',
       accounts: [
@@ -252,22 +198,17 @@ class App extends React.Component<any, any> {
         },
       ]
     }
-    const connector =  new WalletConnect({ bridge, qrcodeModal: QRCodeModal, qrcodeModalOptions, clientMeta });
+    const connector = new WalletConnect({ qrcodeModal: QRCodeModal, qrcodeModalOptions });
 
     await this.setState({ connector });
-    console.log('init ', connector)
     // check if already connected
     if (!connector.connected) {
       // create new session
-      console.log('before create session', connector);
       await connector.createSession({ chainId: this.state.chainId });
     }
-
     // subscribe to events
-    console.log('after create session', connector)
     await this.subscribeToEvents();
   };
-
 
   public subscribeToEvents = () => {
     const { connector } = this.state;
@@ -318,9 +259,7 @@ class App extends React.Component<any, any> {
         address,
       });
       this.onSessionUpdate(accounts, chainId);
-      console.log('subscribeToEvents connector.connected')
     }
-    console.log('subscribeToEvents')
     this.setState({ connector });
   };
 
@@ -341,7 +280,6 @@ class App extends React.Component<any, any> {
     // const mappedAccounts = accounts.map(account => account.toLowerCase());
     const address = accounts[0].toLowerCase();
     console.log('current accounts', accounts)
-    console.log('payload', payload)
     await this.setState({
       connected: true,
       chainId,
@@ -363,7 +301,7 @@ class App extends React.Component<any, any> {
 
   public getAccountAssets = async () => {
     const { address, chainId } = this.state;
-    console.log(`address : ${address}\n chainId : ${chainId}`)
+    // console.log(`address : ${address}\n chainId : ${chainId}`)
     this.setState({ fetching: true });
     try {
       // get account balances
@@ -378,100 +316,20 @@ class App extends React.Component<any, any> {
 
   public toggleModal = () => this.setState({ showModal: !this.state.showModal });
 
-  public testAddToken = async () => {
-    const { connector, address, chainId, assets } = this.state;
-    console.log('assets', assets)
 
-    if (!connector) {
-      return;
-    }
-
-    // test message
-    const message = `add Token`;
-
-    // hash message
-    // const hash = hashMessage(message);
-    const hexMsg = convertUtf8ToHex(message);
-
-    // eth_sign params
-    // const msgParams = [address, hash];
-    const msgParams = [hexMsg, address]
-
-    try {
-      // open modal
-      this.toggleModal();
-
-      // toggle pending request indicator
-      this.setState({ pendingRequest: true });
-
-      // send message
-      const result = await connector.signMessage(msgParams);
-
-      // verify signature
-      const valid = await verifySignature(address, result, hexMsg, chainId);
-      console.log(valid)
-      // format displayed result
-      const formattedResult = {
-        method: "addToken",
-        address,
-        valid,
-        result,
-      };
-
-      // display result
-      this.setState({
-        connector,
-        pendingRequest: false,
-        result: formattedResult || null,
-      });
-    } catch (error) {
-      console.error(error);
-      this.setState({ connector, pendingRequest: false, result: null });
-    }
-  };
   public testSendTransaction = async () => {
-    // const { connector, address, chainId } = this.state;
     const { connector, address } = this.state;
 
     if (!connector) {
       return;
     }
-    // 672324007754989393
-    // 150000000000000000
-    // from
     const from = address;
 
     // to
     const to = '0xb10C975b92F563AF88F34DB4d7178352c5bc1311';
-    const accounts = await getAccounts();
-    console.log(accounts)
-
-    // 0xb10C975b92F563AF88F34DB4d7178352c5bc1311
-
-    // nonce
-    // const _nonce = await apiGetAccountNonce(address, chainId);
-    // const nonce = sanitizeHex(convertStringToHex(_nonce));
-
-
-    // const _blockNumber = await apiGetBlockNumber();
-
-    // const _nonce = await apiGetNonce(_blockNumber);
-    const _nonce = await apiGetTransactionCount(address);
-    console.log('_nonce', _nonce)
-    // const nonce = sanitizeHex(convertStringToHex(_nonce));
-    // gasPrice
-    // const gasPrices = await apiGetGasPrice();
+    // const _nonce = await apiGetTransactionCount(address);
     const gasPrices = await getProviderGasPrice();
-    console.log(gasPrices)
     const gasPrice = sanitizeHex(gasPrices);
-    // console.log(gasPrice)
-    // const _gasPrice = gasPrices;
-    // const _gasPrice = gasPrices.slow.price;
-    // const _gasPrice = gasPrices;
-
-    // const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
-    // const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 18)));
-    console.log(gasPrice)
     // gasLimit
     const _gasLimit = 21000;
     const gasLimit = sanitizeHex(convertStringToHex(_gasLimit));
@@ -481,8 +339,7 @@ class App extends React.Component<any, any> {
     const value = sanitizeHex(convertStringToHex(_value));
 
     // data
-    // const data = "0x";
-
+    const data = "0x";
     // test transaction
     const tx = {
       from,
@@ -491,7 +348,7 @@ class App extends React.Component<any, any> {
       gasPrice,
       gasLimit,
       value,
-      // data,
+      data,
     };
     console.log('signed tx', tx)
 
@@ -527,7 +384,6 @@ class App extends React.Component<any, any> {
   };
 
   public testSignTransaction = async () => {
-    // const { connector, address, chainId } = this.state;
     const { connector, address } = this.state;
 
     if (!connector) {
@@ -539,19 +395,14 @@ class App extends React.Component<any, any> {
 
     // to
     const to = address;
-    const balance = await getBalance(address);
-    console.log(balance);
     // nonce
     // const _nonce = await apiGetAccountNonce(address, chainId);
     const _blockNumber = await apiGetBlockNumber();
 
     const _nonce = await apiGetNonce(_blockNumber);
-    console.log('_nonce', _nonce)
     const nonce = sanitizeHex(convertStringToHex(_nonce));
-    console.log('nonce', nonce);
     // gasPrice
     const gasPrices = await apiGetGasPrices();
-    console.log(gasPrices)
     const _gasPrice = gasPrices.slow.price;
     const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
 
@@ -576,7 +427,6 @@ class App extends React.Component<any, any> {
       value,
       data,
     };
-    console.log('tx', tx)
 
     try {
       // open modal
@@ -783,12 +633,6 @@ class App extends React.Component<any, any> {
       // verify signature
       const hash = hashTypedDataMessage(message);
       const valid = await verifySignature(address, result, hash, chainId);
-      const web3Accounts = await apiGetAccounts();
-      const web3GasPrice = await apiGetGasPrice();
-      const web3Balance = await apiGetBalance(address);
-      console.log(web3Balance);
-      console.log('gas', web3GasPrice)
-      console.log(web3Accounts)
 
       // format displayed result
       const formattedResult = {
@@ -821,6 +665,8 @@ class App extends React.Component<any, any> {
       pendingRequest,
       result,
     } = this.state;
+
+
     return (
       <SLayout>
         <Column maxWidth={1000} spanHeight>
@@ -838,10 +684,7 @@ class App extends React.Component<any, any> {
                   <br />
                   <span>{`v${process.env.REACT_APP_VERSION}`}</span>
                 </h3>
-                <div>
-                  <button onClick={() => this.setChainId('1')}>Ethereum</button>
-                  <button onClick={() => this.setChainId('8217')}>Klaytn</button>
-                </div>
+                <NetworkList networkList={activeNet} selectChainId={this.setChainId} />
                 <SButtonContainer>
                   <SConnectButton left onClick={this.connect} fetching={fetching}>
                     {"Connect to WalletConnect"}
@@ -871,9 +714,6 @@ class App extends React.Component<any, any> {
                     </STestButton>
                     <STestButton left onClick={this.testPersonalSignMessage}>
                       {"personal_sign"}
-                    </STestButton>
-                    <STestButton left onClick={this.testAddToken} >
-                      {"Add_Token"}
                     </STestButton>
                   </STestButtonContainer>
                 </Column>
