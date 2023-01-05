@@ -12,22 +12,26 @@ import Modal from "./components/Modal";
 import Header from "./components/Header";
 import Loader from "./components/Loader";
 import { fonts } from "./styles";
-import { apiGetAccountAssets, apiGetGasPrices } from "./helpers/api"; // apiGetAccountNonce
+// import { apiGetAccountAssets, apiGetAccountNonce, apiGetGasPrices } from "./helpers/api"; // apiGetAccountNonce
+import { apiGetAccountNonce, apiGetGasPrices } from "./helpers/api"; // apiGetAccountNonce
+
 import {
   sanitizeHex,
   verifySignature,
   hashTypedDataMessage,
   hashMessage,
+  getChainData,
 } from "./helpers/utilities";
 import { convertAmountToRawNumber, convertStringToHex } from "./helpers/bignumber";
+
 import { IAssetData } from "./helpers/types";
 import Banner from "./components/Banner";
 import AccountAssets from "./components/AccountAssets";
 import { eip712 } from "./helpers/eip712";
-import { apiGetBlockNumber, apiGetNonce } from './helpers/web3_utils'
-import { getProviderGasPrice } from "./helpers/ethers_utils";
+import { getBalance, getProviderGasPrice, getTokenBalance, getTokenDecimals, initProvider } from "./helpers/ethers_utils";
 import NetworkList from "./components/NetworkList";
-import { activeNet } from "./constant/EthereumType";
+import { activeNet, testNet } from "./constant/EthereumType";
+import NetworkType from "./constant/NetworkType";
 const SLayout = styled.div`
   position: relative;
   width: 100%;
@@ -129,6 +133,15 @@ const STestButton = styled(Button as any)`
   max-width: 175px;
   margin: 12px;
 `;
+const SNetworkListWrapper = styled.div`
+  display:flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  height:40%;
+  font-size:1.5rem;
+  
+`
 
 interface IAppState {
   connector: WalletConnect | null;
@@ -163,11 +176,28 @@ const INITIAL_STATE: IAppState = {
   result: null,
   assets: [],
   token: {
-    contractAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-    decimals: 6,
+    contractAddress: '',
+    decimals: 0,
   }
 };
 
+const qrcodeModalOptions = {
+  serviceName: "D'CENT TEST DAPP",
+  accounts: [
+    {
+      contractAddress: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+      networkType: 'POLYGON',
+      name: 'USD Coin',
+      symbol: 'USDC',
+    },
+    {
+      contractAddress: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
+      networkType: 'POLYGON',
+      name: 'Tether',
+      symbol: 'USDT'
+    }
+  ]
+};
 class App extends React.Component<any, any> {
   public state: IAppState = {
     ...INITIAL_STATE,
@@ -183,21 +213,7 @@ class App extends React.Component<any, any> {
   }
 
   public connect = async () => {
-    const qrcodeModalOptions = {
-      serviceName: 'SKYPlay',
-      accounts: [
-        {
-          contractAddress: '0x4c665bbafd28ec9e5d792345f470ebfca21e3d15',
-          networkType: 'POLYGON',
-          name: 'SKYPlay',
-          symbol: 'SKP'
-        },
-        {
-          contractAddress: '',
-          networkType: 'XRP',
-        },
-      ]
-    }
+
     const connector = new WalletConnect({ qrcodeModal: QRCodeModal, qrcodeModalOptions });
 
     await this.setState({ connector });
@@ -250,7 +266,7 @@ class App extends React.Component<any, any> {
 
     if (connector.connected) {
       const { chainId, accounts } = connector;
-      console.log(accounts)
+      initProvider(chainId)
       const address = accounts[0];
       this.setState({
         connected: true,
@@ -277,16 +293,15 @@ class App extends React.Component<any, any> {
 
   public onConnect = async (payload: IInternalEvent) => {
     const { chainId, accounts } = payload.params[0];
-    // const mappedAccounts = accounts.map(account => account.toLowerCase());
     const address = accounts[0].toLowerCase();
-    console.log('current accounts', accounts)
+    initProvider(chainId)
     await this.setState({
       connected: true,
       chainId,
       accounts,
       address,
     });
-    this.getAccountAssets();
+    await this.getAccountAssets();
   };
 
   public onDisconnect = async () => {
@@ -301,13 +316,45 @@ class App extends React.Component<any, any> {
 
   public getAccountAssets = async () => {
     const { address, chainId } = this.state;
-    // console.log(`address : ${address}\n chainId : ${chainId}`)
     this.setState({ fetching: true });
     try {
-      // get account balances
-      const assets = await apiGetAccountAssets(address, chainId);
-
-      await this.setState({ fetching: false, address, assets });
+      const assets = [];
+      const nativeBalance = await getBalance(address);
+      const { native_currency } = getChainData(chainId);
+      assets.push({
+        ...native_currency,
+        balance: nativeBalance,
+      })
+      const tokens = qrcodeModalOptions.accounts.filter(account =>{
+        if(!account.contractAddress){
+          return false;
+        }
+        const tokenChainId = Object.prototype.hasOwnProperty.call(NetworkType,account.networkType.toUpperCase()) ? NetworkType[account.networkType.toUpperCase()] : null;
+        if(!tokenChainId || tokenChainId.toString() !== chainId.toString()){
+          return false;
+        }
+        return true;
+      });
+      if (tokens.length) {
+        const result = await Promise.all(tokens.map(async account => {
+          const tokenBalance = await getTokenBalance(address, account.contractAddress);
+          const tokenDecimals = await getTokenDecimals(account.contractAddress);
+          return {
+            contractAddress: account.contractAddress,
+            symbol: account.symbol,
+            name: account.name,
+            balance: tokenBalance,
+            decimals: tokenDecimals.toString()
+          }
+        }))
+        assets.push(...result)
+      }
+      this.setState({
+        ...this.state,
+        address,
+        fetching: false,
+        assets,
+      })
     } catch (error) {
       console.error(error);
       await this.setState({ fetching: false });
@@ -350,7 +397,6 @@ class App extends React.Component<any, any> {
       value,
       data,
     };
-    console.log('signed tx', tx)
 
     try {
       // open modal
@@ -384,7 +430,7 @@ class App extends React.Component<any, any> {
   };
 
   public testSignTransaction = async () => {
-    const { connector, address } = this.state;
+    const { connector, address, chainId } = this.state;
 
     if (!connector) {
       return;
@@ -395,12 +441,11 @@ class App extends React.Component<any, any> {
 
     // to
     const to = address;
-    // nonce
-    // const _nonce = await apiGetAccountNonce(address, chainId);
-    const _blockNumber = await apiGetBlockNumber();
 
-    const _nonce = await apiGetNonce(_blockNumber);
+    // nonce
+    const _nonce = await apiGetAccountNonce(address, chainId);
     const nonce = sanitizeHex(convertStringToHex(_nonce));
+
     // gasPrice
     const gasPrices = await apiGetGasPrices();
     const _gasPrice = gasPrices.slow.price;
@@ -666,7 +711,6 @@ class App extends React.Component<any, any> {
       result,
     } = this.state;
 
-
     return (
       <SLayout>
         <Column maxWidth={1000} spanHeight>
@@ -680,11 +724,16 @@ class App extends React.Component<any, any> {
             {!address && !assets.length ? (
               <SLanding center>
                 <h3>
-                  {`Try out WalletConnect`}
+                  {`Try out D'CENT WalletConnect`}
                   <br />
                   <span>{`v${process.env.REACT_APP_VERSION}`}</span>
                 </h3>
-                <NetworkList networkList={activeNet} selectChainId={this.setChainId} />
+                <SNetworkListWrapper>
+                  <span>Mainnet</span>
+                  <NetworkList networkList={activeNet} selectChainId={this.setChainId} />
+                  <span>Testnet</span>
+                  <NetworkList networkList={testNet} selectChainId={this.setChainId} />
+                </SNetworkListWrapper>
                 <SButtonContainer>
                   <SConnectButton left onClick={this.connect} fetching={fetching}>
                     {"Connect to WalletConnect"}

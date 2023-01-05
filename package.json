@@ -26,8 +26,8 @@
     "url": "https://github.com/walletconnect/walletconnect-example-dapp/issues"
   },
   "dependencies": {
-    "@dcentwallet/qrcode-modal": "^1.8.1-beta",
-    "@dcentwallet/walletconnect-client": "^1.8.2-beta",
+    "@dcentwallet/qrcode-modal": "^1.8.2",
+    "@dcentwallet/walletconnect-client": "^1.8.3",
     "@types/eth-sig-util": "^2.1.1",
     "axios": "^0.25.0",
     "bignumber.js": "^9.0.1",

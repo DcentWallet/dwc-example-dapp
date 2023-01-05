@@ -1,23 +1,34 @@
-import {convertStringToHex} from './bignumber'
-import {providers} from 'ethers';
-import { convertHexToString } from './bignumber';
-import { getChainData } from './utilities';
-const rpcUrl = getChainData(137).rpc_url;
-const provider = new providers.JsonRpcProvider(rpcUrl);
+import { convertStringToHex } from "./bignumber";
+import { ethers, providers,Contract } from "ethers";
+import { convertHexToString } from "./bignumber";
+import { getChainData } from "./utilities";
+import {balanceOfABI, decimalsOfABI} from '../constant/abi'
 
-export const getAccounts = async (addresss) => {
-    const accounts = await provider.listAccounts().then(response => response)
-    return accounts;
+let provider ;
+export const initProvider = (chainId) => {
+    const rpcUrl = getChainData(parseInt(chainId,10)).rpc_url;
+    provider = new providers.JsonRpcProvider(rpcUrl);
 }
-export const getBalance = async (address) => {
-    const balance = await provider.getBalance(address).then(response => response);
-    return convertHexToString(balance);
-}
-// export const getContract = async () => {
 
-// }
-
+export const getAccounts = async addresss => {
+  const accounts = await provider.listAccounts().then(response => response);
+  return accounts;
+};
+export const getBalance = async address => {
+  const balance = await provider.getBalance(address).then(response => response);
+  return convertHexToString(balance);
+};
 export const getProviderGasPrice = async () => {
-    const gasPrice = await provider.getGasPrice().then(response => response);
-    return convertStringToHex(gasPrice)
+  const gasPrice = await provider.getGasPrice().then(response => response);
+  return convertStringToHex(gasPrice);
+};
+
+export const getTokenBalance = async (address,tokenAddress) => {
+   const contract = new Contract(tokenAddress,balanceOfABI,provider);
+   const tokenBalance = await contract.balanceOf(address)
+   return convertStringToHex('0x'+tokenBalance);
+};
+export const getTokenDecimals = async (tokenAddress) => {
+   const contract = new Contract(tokenAddress,decimalsOfABI,provider);
+   return await contract.decimals()
 }

@@ -56,7 +56,7 @@ export const SUPPORTED_CHAINS: IChainData[] = [
     network: "goerli",
     chain_id: 5,
     network_id: 5,
-    rpc_url: "https://goerli.infura.io/v3/%API_KEY%",
+    rpc_url: "https://goerli.infura.io/v3/7f5bb132d45d426b93f261809d960088",
     native_currency: {
       symbol: "ETH",
       name: "Ether",

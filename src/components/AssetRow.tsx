@@ -28,12 +28,14 @@ const SAssetBalance = styled.div`
 
 const AssetRow = (props: any) => {
   const { asset } = props;
+  console.log('assetRow',asset);
   const nativeCurrencyIcon =
     asset.symbol && asset.symbol.toLowerCase() === "eth"
       ? eth
       : asset.symbol && asset.symbol.toLowerCase() === "xdai"
       ? xdai
       : null;
+  
   return (
     <SAssetRow {...props}>
       <SAssetRowLeft>
@@ -46,7 +48,7 @@ const AssetRow = (props: any) => {
       </SAssetRowLeft>
       <SAssetRowRight>
         <SAssetBalance>
-          {`${handleSignificantDecimals(convertAmountFromRawNumber(asset.balance), 8)} ${
+          {`${handleSignificantDecimals(convertAmountFromRawNumber(asset.balance,asset.decimals),asset.decimals)} ${
             asset.symbol
           }`}
         </SAssetBalance>
