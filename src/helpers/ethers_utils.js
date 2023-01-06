@@ -1,5 +1,5 @@
 import { convertStringToHex } from "./bignumber";
-import { ethers, providers,Contract } from "ethers";
+import { providers,Contract } from "ethers";
 import { convertHexToString } from "./bignumber";
 import { getChainData } from "./utilities";
 import {balanceOfABI, decimalsOfABI} from '../constant/abi'
