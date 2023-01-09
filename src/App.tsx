@@ -1,9 +1,10 @@
 import * as React from "react";
 import styled from "styled-components";
-import WalletConnect from "@walletconnect/client";
-import QRCodeModal from "@walletconnect/qrcode-modal";
+import WalletConnect from "@dcentwallet/walletconnect-client";
+import QRCodeModal from "@dcentwallet/qrcode-modal";
 import { convertUtf8ToHex } from "@walletconnect/utils";
-import { IInternalEvent } from "@walletconnect/types";
+import { IInternalEvent, } from "@walletconnect/types";
+// IPushServerOptions
 import Button from "./components/Button";
 import Column from "./components/Column";
 import Wrapper from "./components/Wrapper";
@@ -11,23 +12,28 @@ import Modal from "./components/Modal";
 import Header from "./components/Header";
 import Loader from "./components/Loader";
 import { fonts } from "./styles";
-import { apiGetAccountAssets, apiGetGasPrices, apiGetAccountNonce } from "./helpers/api";
+import { apiGetAccountNonce, apiGetGasPrices } from "./helpers/api"; // apiGetAccountNonce
+
 import {
   sanitizeHex,
   verifySignature,
   hashTypedDataMessage,
   hashMessage,
+  getChainData,
 } from "./helpers/utilities";
 import { convertAmountToRawNumber, convertStringToHex } from "./helpers/bignumber";
+
 import { IAssetData } from "./helpers/types";
 import Banner from "./components/Banner";
 import AccountAssets from "./components/AccountAssets";
 import { eip712 } from "./helpers/eip712";
-
+import { getBalance, getProviderGasPrice, getTokenBalance, getTokenDecimals, initProvider } from "./helpers/ethers_utils";
+import NetworkList from "./components/NetworkList";
+import { activeNet, testNet } from "./constant/EthereumType";
+import NetworkType from "./constant/NetworkType";
 const SLayout = styled.div`
   position: relative;
   width: 100%;
-  /* height: 100%; */
   min-height: 100vh;
   text-align: center;
 `;
@@ -126,6 +132,15 @@ const STestButton = styled(Button as any)`
   max-width: 175px;
   margin: 12px;
 `;
+const SNetworkListWrapper = styled.div`
+  display:flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  height:40%;
+  font-size:1.5rem;
+  
+`
 
 interface IAppState {
   connector: WalletConnect | null;
@@ -139,13 +154,19 @@ interface IAppState {
   address: string;
   result: any | null;
   assets: IAssetData[];
+  token: IToken;
+}
+
+interface IToken {
+  contractAddress: string;
+  decimals: number;
 }
 
 const INITIAL_STATE: IAppState = {
   connector: null,
   fetching: false,
   connected: false,
-  chainId: 1,
+  chainId: 137,
   showModal: false,
   pendingRequest: false,
   uri: "",
@@ -153,31 +174,57 @@ const INITIAL_STATE: IAppState = {
   address: "",
   result: null,
   assets: [],
+  token: {
+    contractAddress: '',
+    decimals: 0,
+  }
 };
 
+const qrcodeModalOptions = {
+  serviceName: "D'CENT TEST DAPP",
+  accounts: [
+    {
+      contractAddress: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+      networkType: 'POLYGON',
+      name: 'USD Coin',
+      symbol: 'USDC',
+    },
+    {
+      contractAddress: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
+      networkType: 'POLYGON',
+      name: 'Tether',
+      symbol: 'USDT'
+    }
+  ]
+};
 class App extends React.Component<any, any> {
   public state: IAppState = {
     ...INITIAL_STATE,
   };
 
-  public connect = async () => {
-    // bridge url
-    const bridge = "https://bridge.walletconnect.org";
+  public setChainId = (chainNumber: string) => {
+    const chainId = parseInt(chainNumber, 10);
+    alert(`${chainNumber} 을 선택 하셨습니다`)
+    this.setState({
+      ...this.state,
+      chainId,
+    })
+  }
 
-    // create new connector
-    const connector = new WalletConnect({ bridge, qrcodeModal: QRCodeModal });
+  public connect = async () => {
+
+    const connector = new WalletConnect({ qrcodeModal: QRCodeModal, qrcodeModalOptions });
 
     await this.setState({ connector });
-
     // check if already connected
     if (!connector.connected) {
       // create new session
-      await connector.createSession();
+      await connector.createSession({ chainId: this.state.chainId });
     }
-
     // subscribe to events
     await this.subscribeToEvents();
   };
+
   public subscribeToEvents = () => {
     const { connector } = this.state;
 
@@ -218,16 +265,16 @@ class App extends React.Component<any, any> {
 
     if (connector.connected) {
       const { chainId, accounts } = connector;
+      initProvider(chainId)
       const address = accounts[0];
       this.setState({
         connected: true,
-        chainId,
+        chainId: 1,
         accounts,
         address,
       });
       this.onSessionUpdate(accounts, chainId);
     }
-
     this.setState({ connector });
   };
 
@@ -245,14 +292,15 @@ class App extends React.Component<any, any> {
 
   public onConnect = async (payload: IInternalEvent) => {
     const { chainId, accounts } = payload.params[0];
-    const address = accounts[0];
+    const address = accounts[0].toLowerCase();
+    initProvider(chainId)
     await this.setState({
       connected: true,
       chainId,
       accounts,
       address,
     });
-    this.getAccountAssets();
+    await this.getAccountAssets();
   };
 
   public onDisconnect = async () => {
@@ -269,10 +317,43 @@ class App extends React.Component<any, any> {
     const { address, chainId } = this.state;
     this.setState({ fetching: true });
     try {
-      // get account balances
-      const assets = await apiGetAccountAssets(address, chainId);
-
-      await this.setState({ fetching: false, address, assets });
+      const assets = [];
+      const nativeBalance = await getBalance(address);
+      const { native_currency } = getChainData(chainId);
+      assets.push({
+        ...native_currency,
+        balance: nativeBalance,
+      })
+      const tokens = qrcodeModalOptions.accounts.filter(account => {
+        if (!account.contractAddress) {
+          return false;
+        }
+        const tokenChainId = Object.prototype.hasOwnProperty.call(NetworkType, account.networkType.toUpperCase()) ? NetworkType[account.networkType.toUpperCase()] : null;
+        if (!tokenChainId || tokenChainId.toString() !== chainId.toString()) {
+          return false;
+        }
+        return true;
+      });
+      if (tokens.length) {
+        const result = await Promise.all(tokens.map(async account => {
+          const tokenBalance = await getTokenBalance(address, account.contractAddress);
+          const tokenDecimals = await getTokenDecimals(account.contractAddress);
+          return {
+            contractAddress: account.contractAddress,
+            symbol: account.symbol,
+            name: account.name,
+            balance: tokenBalance,
+            decimals: tokenDecimals.toString()
+          }
+        }))
+        assets.push(...result)
+      }
+      this.setState({
+        ...this.state,
+        address,
+        fetching: false,
+        assets,
+      })
     } catch (error) {
       console.error(error);
       await this.setState({ fetching: false });
@@ -281,44 +362,35 @@ class App extends React.Component<any, any> {
 
   public toggleModal = () => this.setState({ showModal: !this.state.showModal });
 
+
   public testSendTransaction = async () => {
-    const { connector, address, chainId } = this.state;
+    const { connector, address } = this.state;
 
     if (!connector) {
       return;
     }
-
-    // from
     const from = address;
 
     // to
-    const to = address;
-
-    // nonce
-    const _nonce = await apiGetAccountNonce(address, chainId);
-    const nonce = sanitizeHex(convertStringToHex(_nonce));
-
-    // gasPrice
-    const gasPrices = await apiGetGasPrices();
-    const _gasPrice = gasPrices.slow.price;
-    const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
-
+    const to = '0xb10C975b92F563AF88F34DB4d7178352c5bc1311';
+    // const _nonce = await apiGetTransactionCount(address);
+    const gasPrices = await getProviderGasPrice();
+    const gasPrice = sanitizeHex(gasPrices);
     // gasLimit
     const _gasLimit = 21000;
     const gasLimit = sanitizeHex(convertStringToHex(_gasLimit));
 
     // value
-    const _value = 0;
+    const _value = 150000000000000000;
     const value = sanitizeHex(convertStringToHex(_value));
 
     // data
     const data = "0x";
-
     // test transaction
     const tx = {
       from,
       to,
-      nonce,
+      // nonce,
       gasPrice,
       gasLimit,
       value,
@@ -637,6 +709,7 @@ class App extends React.Component<any, any> {
       pendingRequest,
       result,
     } = this.state;
+
     return (
       <SLayout>
         <Column maxWidth={1000} spanHeight>
@@ -650,10 +723,16 @@ class App extends React.Component<any, any> {
             {!address && !assets.length ? (
               <SLanding center>
                 <h3>
-                  {`Try out WalletConnect`}
+                  {`Try out D'CENT WalletConnect`}
                   <br />
                   <span>{`v${process.env.REACT_APP_VERSION}`}</span>
                 </h3>
+                <SNetworkListWrapper>
+                  <span>Mainnet</span>
+                  <NetworkList networkList={activeNet} selectChainId={this.setChainId} />
+                  <span>Testnet</span>
+                  <NetworkList networkList={testNet} selectChainId={this.setChainId} />
+                </SNetworkListWrapper>
                 <SButtonContainer>
                   <SConnectButton left onClick={this.connect} fetching={fetching}>
                     {"Connect to WalletConnect"}
@@ -669,9 +748,9 @@ class App extends React.Component<any, any> {
                     <STestButton left onClick={this.testSendTransaction}>
                       {"eth_sendTransaction"}
                     </STestButton>
-                    <STestButton left onClick={this.testSignTransaction}>
+                    {/* <STestButton left onClick={this.testSignTransaction}>
                       {"eth_signTransaction"}
-                    </STestButton>
+                    </STestButton> */}
                     <STestButton left onClick={this.testSignTypedData}>
                       {"eth_signTypedData"}
                     </STestButton>

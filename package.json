@@ -1,37 +1,43 @@
 {
-  "name": "walletconnect-example-dapp",
-  "version": "1.7.8",
-  "private": true,
+  "name": "dwc-example-dapp",
+  "version": "1.8.0",
+  "private": false,
   "keywords": [
     "walletconnect",
     "ethereum",
     "web3",
-    "crypto"
+    "crypto",
+    "dcent",
+    "dcentwalletconnect"
   ],
   "author": "WalletConnect, Inc. <walletconnect.com>",
-  "homepage": "https://walletconnect.org",
+  "homepage": "https://dcentwallet.github.io/dwc-example-dapp",
   "license": "MIT",
   "scripts": {
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
-    "lint": "eslint -c './.eslintrc' --fix './src/**/*{.ts,.tsx}'"
+    "lint": "eslint -c './.eslintrc' --fix './src/**/*{.ts,.tsx}'",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/walletconnect/walletconnect-example-dapp.git"
+    "url": "git+https://github.com/DcentWallet/dwc-example-dapp.git"
   },
   "bugs": {
-    "url": "https://github.com/walletconnect/walletconnect-example-dapp/issues"
+    "url": "https://github.com/DcentWallet/dwc-example-dapp/issues"
   },
   "dependencies": {
+    "@dcentwallet/qrcode-modal": "^1.8.2",
+    "@dcentwallet/walletconnect-client": "^1.8.3",
     "@types/eth-sig-util": "^2.1.1",
-    "@walletconnect/client": "^1.7.8",
-    "@walletconnect/qrcode-modal": "^1.7.8",
     "axios": "^0.25.0",
     "bignumber.js": "^9.0.1",
     "blockies-ts": "^1.0.0",
+    "eslint": "^5.16.0",
+    "eslint-plugin-jsx-a11y": "^6.6.1",
     "eth-sig-util": "^2.5.3",
     "ethereumjs-util": "^7.0.6",
     "ethers": "^5.0.17",
@@ -66,7 +72,9 @@
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
+    "gh-pages": "^4.0.0",
     "prettier": "^1.19.1",
+    "tslib": "^2.4.1",
     "typescript": "^3.7.4"
   },
   "eslintConfig": {
