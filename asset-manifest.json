@@ -1,15 +1,15 @@
 {
-  "main.js": "/dcentWallet/dwc-example-dapp.git/static/js/main.ee5b2c45.chunk.js",
-  "main.js.map": "/dcentWallet/dwc-example-dapp.git/static/js/main.ee5b2c45.chunk.js.map",
-  "static/js/1.75cf836a.chunk.js": "/dcentWallet/dwc-example-dapp.git/static/js/1.75cf836a.chunk.js",
-  "static/js/1.75cf836a.chunk.js.map": "/dcentWallet/dwc-example-dapp.git/static/js/1.75cf836a.chunk.js.map",
-  "runtime~main.js": "/dcentWallet/dwc-example-dapp.git/static/js/runtime~main.a10de3d7.js",
-  "runtime~main.js.map": "/dcentWallet/dwc-example-dapp.git/static/js/runtime~main.a10de3d7.js.map",
-  "static/media/erc20.svg": "/dcentWallet/dwc-example-dapp.git/static/media/erc20.d46849e6.svg",
-  "static/media/walletconnect-banner.png": "/dcentWallet/dwc-example-dapp.git/static/media/walletconnect-banner.e1cb8d21.png",
-  "static/media/eth.svg": "/dcentWallet/dwc-example-dapp.git/static/media/eth.5d1692b2.svg",
-  "static/media/xdai.png": "/dcentWallet/dwc-example-dapp.git/static/media/xdai.e37299a8.png",
-  "index.html": "/dcentWallet/dwc-example-dapp.git/index.html",
-  "precache-manifest.cbbb5712ad063d9c89d969172f5a8776.js": "/dcentWallet/dwc-example-dapp.git/precache-manifest.cbbb5712ad063d9c89d969172f5a8776.js",
-  "service-worker.js": "/dcentWallet/dwc-example-dapp.git/service-worker.js"
+  "main.js": "/dwc-example-dapp/static/js/main.422fae1e.chunk.js",
+  "main.js.map": "/dwc-example-dapp/static/js/main.422fae1e.chunk.js.map",
+  "static/js/1.d3cc1bab.chunk.js": "/dwc-example-dapp/static/js/1.d3cc1bab.chunk.js",
+  "static/js/1.d3cc1bab.chunk.js.map": "/dwc-example-dapp/static/js/1.d3cc1bab.chunk.js.map",
+  "runtime~main.js": "/dwc-example-dapp/static/js/runtime~main.36928906.js",
+  "runtime~main.js.map": "/dwc-example-dapp/static/js/runtime~main.36928906.js.map",
+  "static/media/erc20.svg": "/dwc-example-dapp/static/media/erc20.d46849e6.svg",
+  "static/media/walletconnect-banner.png": "/dwc-example-dapp/static/media/walletconnect-banner.e1cb8d21.png",
+  "static/media/eth.svg": "/dwc-example-dapp/static/media/eth.5d1692b2.svg",
+  "static/media/xdai.png": "/dwc-example-dapp/static/media/xdai.e37299a8.png",
+  "index.html": "/dwc-example-dapp/index.html",
+  "precache-manifest.285ed3078817aed15cc8b75289eb7f9f.js": "/dwc-example-dapp/precache-manifest.285ed3078817aed15cc8b75289eb7f9f.js",
+  "service-worker.js": "/dwc-example-dapp/service-worker.js"
 }

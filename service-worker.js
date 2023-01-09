@@ -11,11 +11,11 @@
  * See https://goo.gl/2aRDsh
  */
 
-importScripts("/dcentWallet/dwc-example-dapp.git/workbox-v3.6.3/workbox-sw.js");
-workbox.setConfig({modulePathPrefix: "/dcentWallet/dwc-example-dapp.git/workbox-v3.6.3"});
+importScripts("/dwc-example-dapp/workbox-v3.6.3/workbox-sw.js");
+workbox.setConfig({modulePathPrefix: "/dwc-example-dapp/workbox-v3.6.3"});
 
 importScripts(
-  "/dcentWallet/dwc-example-dapp.git/precache-manifest.cbbb5712ad063d9c89d969172f5a8776.js"
+  "/dwc-example-dapp/precache-manifest.285ed3078817aed15cc8b75289eb7f9f.js"
 );
 
 workbox.clientsClaim();
@@ -29,7 +29,7 @@ self.__precacheManifest = [].concat(self.__precacheManifest || []);
 workbox.precaching.suppressWarnings();
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {});
 
-workbox.routing.registerNavigationRoute("/dcentWallet/dwc-example-dapp.git/index.html", {
+workbox.routing.registerNavigationRoute("/dwc-example-dapp/index.html", {
   
   blacklist: [/^\/_/,/\/[^/]+\.[^/]+$/],
 });
