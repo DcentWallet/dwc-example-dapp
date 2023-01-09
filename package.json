@@ -1,5 +1,5 @@
 {
-  "name": "dcentwallet test dapp",
+  "name": "dwc-example-dapp",
   "version": "1.7.8",
   "private": false,
   "keywords": [
@@ -22,10 +22,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/walletconnect/walletconnect-example-dapp.git"
+    "url": "git+https://github.com/DcentWallet/dwc-example-dapp.git"
   },
   "bugs": {
-    "url": "https://github.com/walletconnect/walletconnect-example-dapp/issues"
+    "url": "https://github.com/DcentWallet/dwc-example-dapp/issues"
   },
   "dependencies": {
     "@dcentwallet/qrcode-modal": "^1.8.2",
