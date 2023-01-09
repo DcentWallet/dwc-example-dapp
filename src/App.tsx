@@ -12,7 +12,7 @@ import Modal from "./components/Modal";
 import Header from "./components/Header";
 import Loader from "./components/Loader";
 import { fonts } from "./styles";
-import { apiGetAccountNonce, apiGetGasPrices } from "./helpers/api"; // apiGetAccountNonce
+import { apiGetAccountNonce, apiGetGasPrices } from "./helpers/api";
 
 import {
   sanitizeHex,
