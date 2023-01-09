@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import * as React from "react";
 import Column from "./Column";
 import AssetRow from "./AssetRow";
 import { IAssetData } from "../helpers/types";
@@ -6,9 +6,9 @@ import { getChainData } from "src/helpers/utilities";
 
 const AccountAssets = (props: any) => {
   const { assets, chainId } = props;
-  const [nativeCurrency, setNativeCurrency] = useState<IAssetData>();
-  const [tokens, setTokens] = useState<IAssetData[]>();
-  useEffect(() => {
+  const [nativeCurrency, setNativeCurrency] = React.useState<IAssetData>();
+  const [tokens, setTokens] = React.useState<IAssetData[]>();
+  React.useEffect(() => {
     if (!assets.length) { 
       return;
     }

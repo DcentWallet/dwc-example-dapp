@@ -12,7 +12,6 @@ import Modal from "./components/Modal";
 import Header from "./components/Header";
 import Loader from "./components/Loader";
 import { fonts } from "./styles";
-// import { apiGetAccountAssets, apiGetAccountNonce, apiGetGasPrices } from "./helpers/api"; // apiGetAccountNonce
 import { apiGetAccountNonce, apiGetGasPrices } from "./helpers/api"; // apiGetAccountNonce
 
 import {
@@ -325,12 +324,12 @@ class App extends React.Component<any, any> {
         ...native_currency,
         balance: nativeBalance,
       })
-      const tokens = qrcodeModalOptions.accounts.filter(account =>{
-        if(!account.contractAddress){
+      const tokens = qrcodeModalOptions.accounts.filter(account => {
+        if (!account.contractAddress) {
           return false;
         }
-        const tokenChainId = Object.prototype.hasOwnProperty.call(NetworkType,account.networkType.toUpperCase()) ? NetworkType[account.networkType.toUpperCase()] : null;
-        if(!tokenChainId || tokenChainId.toString() !== chainId.toString()){
+        const tokenChainId = Object.prototype.hasOwnProperty.call(NetworkType, account.networkType.toUpperCase()) ? NetworkType[account.networkType.toUpperCase()] : null;
+        if (!tokenChainId || tokenChainId.toString() !== chainId.toString()) {
           return false;
         }
         return true;

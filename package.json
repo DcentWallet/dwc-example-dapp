@@ -1,7 +1,7 @@
 {
-  "name": "walletconnect-example-dapp",
+  "name": "dcentwallet test dapp",
   "version": "1.7.8",
-  "private": true,
+  "private": false,
   "keywords": [
     "walletconnect",
     "ethereum",
@@ -9,7 +9,7 @@
     "crypto"
   ],
   "author": "WalletConnect, Inc. <walletconnect.com>",
-  "homepage": "https://walletconnect.org",
+  "homepage": "https://dcentwallet.github.io/dwc-example-dapp",
   "license": "MIT",
   "scripts": {
     "start": "react-scripts-ts start",
@@ -28,13 +28,14 @@
     "url": "https://github.com/walletconnect/walletconnect-example-dapp/issues"
   },
   "dependencies": {
-    "@types/eth-sig-util": "^2.1.1",
     "@dcentwallet/qrcode-modal": "^1.8.2",
     "@dcentwallet/walletconnect-client": "^1.8.3",
+    "@types/eth-sig-util": "^2.1.1",
     "axios": "^0.25.0",
     "bignumber.js": "^9.0.1",
     "blockies-ts": "^1.0.0",
-    "eslint": "^5.6.0",
+    "eslint": "^5.16.0",
+    "eslint-plugin-jsx-a11y": "^6.6.1",
     "eth-sig-util": "^2.5.3",
     "ethereumjs-util": "^7.0.6",
     "ethers": "^5.0.17",
