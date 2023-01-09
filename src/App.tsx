@@ -748,9 +748,9 @@ class App extends React.Component<any, any> {
                     <STestButton left onClick={this.testSendTransaction}>
                       {"eth_sendTransaction"}
                     </STestButton>
-                    <STestButton left onClick={this.testSignTransaction}>
+                    {/* <STestButton left onClick={this.testSignTransaction}>
                       {"eth_signTransaction"}
-                    </STestButton>
+                    </STestButton> */}
                     <STestButton left onClick={this.testSignTypedData}>
                       {"eth_signTypedData"}
                     </STestButton>
