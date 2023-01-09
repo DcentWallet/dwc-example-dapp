@@ -1,15 +1,15 @@
 {
-  "main.js": "/DcentWallet/dwc-example-dapp.git/static/js/main.aff20b8a.chunk.js",
-  "main.js.map": "/DcentWallet/dwc-example-dapp.git/static/js/main.aff20b8a.chunk.js.map",
-  "static/js/1.6472d08c.chunk.js": "/DcentWallet/dwc-example-dapp.git/static/js/1.6472d08c.chunk.js",
-  "static/js/1.6472d08c.chunk.js.map": "/DcentWallet/dwc-example-dapp.git/static/js/1.6472d08c.chunk.js.map",
-  "runtime~main.js": "/DcentWallet/dwc-example-dapp.git/static/js/runtime~main.5d766843.js",
-  "runtime~main.js.map": "/DcentWallet/dwc-example-dapp.git/static/js/runtime~main.5d766843.js.map",
-  "static/media/erc20.svg": "/DcentWallet/dwc-example-dapp.git/static/media/erc20.d46849e6.svg",
-  "static/media/walletconnect-banner.png": "/DcentWallet/dwc-example-dapp.git/static/media/walletconnect-banner.e1cb8d21.png",
-  "static/media/eth.svg": "/DcentWallet/dwc-example-dapp.git/static/media/eth.5d1692b2.svg",
-  "static/media/xdai.png": "/DcentWallet/dwc-example-dapp.git/static/media/xdai.e37299a8.png",
-  "index.html": "/DcentWallet/dwc-example-dapp.git/index.html",
-  "precache-manifest.ba76f0a518603a8d7911105747901096.js": "/DcentWallet/dwc-example-dapp.git/precache-manifest.ba76f0a518603a8d7911105747901096.js",
-  "service-worker.js": "/DcentWallet/dwc-example-dapp.git/service-worker.js"
+  "main.js": "/dcentWallet/dwc-example-dapp.git/static/js/main.ee5b2c45.chunk.js",
+  "main.js.map": "/dcentWallet/dwc-example-dapp.git/static/js/main.ee5b2c45.chunk.js.map",
+  "static/js/1.75cf836a.chunk.js": "/dcentWallet/dwc-example-dapp.git/static/js/1.75cf836a.chunk.js",
+  "static/js/1.75cf836a.chunk.js.map": "/dcentWallet/dwc-example-dapp.git/static/js/1.75cf836a.chunk.js.map",
+  "runtime~main.js": "/dcentWallet/dwc-example-dapp.git/static/js/runtime~main.a10de3d7.js",
+  "runtime~main.js.map": "/dcentWallet/dwc-example-dapp.git/static/js/runtime~main.a10de3d7.js.map",
+  "static/media/erc20.svg": "/dcentWallet/dwc-example-dapp.git/static/media/erc20.d46849e6.svg",
+  "static/media/walletconnect-banner.png": "/dcentWallet/dwc-example-dapp.git/static/media/walletconnect-banner.e1cb8d21.png",
+  "static/media/eth.svg": "/dcentWallet/dwc-example-dapp.git/static/media/eth.5d1692b2.svg",
+  "static/media/xdai.png": "/dcentWallet/dwc-example-dapp.git/static/media/xdai.e37299a8.png",
+  "index.html": "/dcentWallet/dwc-example-dapp.git/index.html",
+  "precache-manifest.cbbb5712ad063d9c89d969172f5a8776.js": "/dcentWallet/dwc-example-dapp.git/precache-manifest.cbbb5712ad063d9c89d969172f5a8776.js",
+  "service-worker.js": "/dcentWallet/dwc-example-dapp.git/service-worker.js"
 }
