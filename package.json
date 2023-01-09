@@ -1,12 +1,14 @@
 {
   "name": "dwc-example-dapp",
-  "version": "1.7.8",
+  "version": "1.8.0",
   "private": false,
   "keywords": [
     "walletconnect",
     "ethereum",
     "web3",
-    "crypto"
+    "crypto",
+    "dcent",
+    "dcentwalletconnect"
   ],
   "author": "WalletConnect, Inc. <walletconnect.com>",
   "homepage": "https://dcentwallet.github.io/dwc-example-dapp",
